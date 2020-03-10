@@ -57,6 +57,7 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::get('/', function () {
     return view('welcome');
 });
+Route::get('posts/tag/{tag}','PostTagController@index')->name('posts.tags.index');
 
 
 

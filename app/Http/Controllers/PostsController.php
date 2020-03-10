@@ -48,24 +48,25 @@ class PostsController extends Controller
         // $posts=BlogPost::whereDoesntHave('comment',function($query){$query->where('content','like','%Test One%');})->get();
 
         // return view('posts.index',['posts'=>BlogPost::withCount('comment')->get()]);
-        $most_commented=Cache::remember('blog-post-commented', now()->addSeconds(30), function () {
-            return  BlogPost::mostCommented()->take(5)->get();
-        });
-        $mostActive=Cache::remember('users-most-active', now()->addSeconds(30), function () {
-            return  User::WithMostBlogPosts()->take(5)->get();
-        });
-        $mostActiveLastMonth=Cache::remember('users-most-active-last-month', now()->addSeconds(30), function () {
-            return User::withMostBlogPostsLastMonth()->take(5)->get();
-        });
+        //We put all these code in activity composer.php
+        // $most_commented=Cache::remember('blog-post-commented', now()->addSeconds(30), function () {
+        //     return  BlogPost::mostCommented()->take(5)->get();
+        // });
+        // $mostActive=Cache::remember('users-most-active', now()->addSeconds(30), function () {
+        //     return  User::WithMostBlogPosts()->take(5)->get();
+        // });
+        // $mostActiveLastMonth=Cache::remember('users-most-active-last-month', now()->addSeconds(30), function () {
+        //     return User::withMostBlogPostsLastMonth()->take(5)->get();
+        // });
 
         return view(
             'posts.index',
             [
-                'posts' => BlogPost::latest()->withCount('comment')->with('user')->get(),
+                'posts' => BlogPost::latest()->withCount('comment')->with('user')->with('tags')->get(),
                 // 'most_commented' => BlogPost::mostCommented()->take(5)->get(),
-                'most_commented' =>$most_commented,
-                'mostActive' =>$mostActive,
-                 'mostActiveLastMonth' =>$mostActiveLastMonth
+                // 'most_commented' =>$most_commented,
+                // 'mostActive' =>$mostActive,
+                //  'mostActiveLastMonth' =>$mostActiveLastMonth
             ]
         );
 
@@ -153,7 +154,7 @@ public function display()
         // $findid=BlogPost::find($id);
         // dd($findid);
         $blogPost=Cache::remember("blog-post-{$id}", 60, function () use($id) {
-            return BlogPost::with('comment')->findorFail($id);
+            return BlogPost::with('comment')->with('tags')->with('user')->findorFail($id);
         });
         $sessionId=session()->getId();
         $counterKey="blog-post-{$id}-counter";

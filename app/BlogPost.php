@@ -40,7 +40,7 @@ class BlogPost extends Model
     return $query->withCount('comment')->orderBy('comment_count', 'desc');
    }
    public function tags(){
-       return $this->belongsToMany(Tag::class);
+       return $this->belongsToMany(Tag::class)->withTimestamps()->as('tagged');
    }
 
     public static function boot()

@@ -1,5 +1,9 @@
 @extends('layouts.app')
 @section('content')
+<div class="row">
+    <div class="col-md-8">
+
+
 
 <h1>{{ $posts->title }}
 {{-- @if ((new Carbon\Carbon())->diffInMinutes($posts->created_at) < 20) --}}
@@ -17,6 +21,8 @@
 @update(['date'=>$posts->created_at,'name'=>$posts->user->name])
 
 @endupdate
+@tags(['tags'=>$posts->tags])
+@endtags
 {{-- //Optional --}}
 {{-- @update(['date'=>$posts->updated_at])
 updated
@@ -50,4 +56,9 @@ updated
 @empty
 <p class="text-warning">No Comments yet</p>
 @endforelse
+</div>
+<div class="col-md-4">
+@include('posts._activity');
+</div>
+</div>
 @endsection
