@@ -42,6 +42,12 @@ class BlogPost extends Model
    public function tags(){
        return $this->belongsToMany(Tag::class)->withTimestamps()->as('tagged');
    }
+   public function scopelatestwithRelations(Builder $query ){
+           return $query->latest()
+           ->withCount('comment')
+           ->with('user')
+           ->with('tags');
+   }
 
     public static function boot()
     {
@@ -60,6 +66,7 @@ class BlogPost extends Model
         static::restoring(function (BlogPost $blogPost) {
             $blogPost->comment()->restore();
         });
+
     }
 }
 //Tinker

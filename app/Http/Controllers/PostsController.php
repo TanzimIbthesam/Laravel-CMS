@@ -62,7 +62,12 @@ class PostsController extends Controller
         return view(
             'posts.index',
             [
-                'posts' => BlogPost::latest()->withCount('comment')->with('user')->with('tags')->get(),
+                 'posts'=>BlogPost::latestwithRelations()->get(),
+                // 'posts' => BlogPost::latest()
+                // ->withCount('comment')
+                // ->with('user')
+                // ->with('tags')
+                // ->get(),
                 // 'most_commented' => BlogPost::mostCommented()->take(5)->get(),
                 // 'most_commented' =>$most_commented,
                 // 'mostActive' =>$mostActive,
@@ -154,7 +159,11 @@ public function display()
         // $findid=BlogPost::find($id);
         // dd($findid);
         $blogPost=Cache::remember("blog-post-{$id}", 60, function () use($id) {
-            return BlogPost::with('comment')->with('tags')->with('user')->findorFail($id);
+            return BlogPost::with('comment','tags','user','comment.user')->findorFail($id);
+
+
+
+
         });
         $sessionId=session()->getId();
         $counterKey="blog-post-{$id}-counter";

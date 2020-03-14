@@ -12,7 +12,11 @@ class PostTagController extends Controller
     {
         $tag= Tag::findorFail($tag);
         return view('posts.index',
-        ['posts'=>$tag->blogPost,
+        ['posts'=>$tag->blogPost()->latestwithRelations()->get()
+        // ->latest()
+        // ->with('user')
+        // ->with('tags')
+        // ->get()
         // 'most_commented'=>[],
         // 'mostActive'=>[],
         // 'mostActiveLastMonth'=>[],
