@@ -6,10 +6,13 @@ use Illuminate\Http\Request;
 use App\User;
 use App\Carbon;
 use App\Http\Requests\StorePost;
+use App\Image;
+use Facade\FlareClient\Stacktrace\File;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 class PostsController extends Controller
 {
@@ -26,79 +29,16 @@ class PostsController extends Controller
     }
     public function index()
     {
-        // $posts=BlogPost::withCount('comment')->orderBy('created_at','desc')->get();
-        // $posts=BlogPost::latest()->withCount('comment')->get();
-        // $most_commented=BlogPost::mostCommented()->take(5)->get();
-        // $user
-        //  DB::connection()->enableQueryLog();
-
-        // $posts = BlogPost::with('comment')->get();
-        // dd($posts);
-        // foreach ($posts as $post) {
-        //     foreach ($post->comments as $comment) {
-        //         echo $comment->content;
-        //     }
-        // }
-
-        // dd(DB::getQueryLog());
-        //
-        // DB::connection()->enableQueryLog();
-        //  $posts=BlogPost::all();
-        //  $posts=BlogPost::has('comment')->get();
-        // $posts=BlogPost::whereDoesntHave('comment',function($query){$query->where('content','like','%Test One%');})->get();
-
-        // return view('posts.index',['posts'=>BlogPost::withCount('comment')->get()]);
-        //We put all these code in activity composer.php
-        // $most_commented=Cache::remember('blog-post-commented', now()->addSeconds(30), function () {
-        //     return  BlogPost::mostCommented()->take(5)->get();
-        // });
-        // $mostActive=Cache::remember('users-most-active', now()->addSeconds(30), function () {
-        //     return  User::WithMostBlogPosts()->take(5)->get();
-        // });
-        // $mostActiveLastMonth=Cache::remember('users-most-active-last-month', now()->addSeconds(30), function () {
-        //     return User::withMostBlogPostsLastMonth()->take(5)->get();
-        // });
 
         return view(
             'posts.index',
             [
                  'posts'=>BlogPost::latestwithRelations()->get(),
-                // 'posts' => BlogPost::latest()
-                // ->withCount('comment')
-                // ->with('user')
-                // ->with('tags')
-                // ->get(),
-                // 'most_commented' => BlogPost::mostCommented()->take(5)->get(),
-                // 'most_commented' =>$most_commented,
-                // 'mostActive' =>$mostActive,
-                //  'mostActiveLastMonth' =>$mostActiveLastMonth
+
             ]
         );
 
-        // return view('posts.index',compact('posts','most_commented'));
-        // dd($posts);
-        //Alternatively we can write
-        // return view('posts.index',['posts'=> BlogPost::all()]);
-        // dd(DB::getQueryLog());
 
-         //If we want to get BlogPost with comments
-        //  BlogPost::has('comment')->get();
-        //if we want to add comment to a new post $comment=new Comment();
-        //$comment->blog_post_id=3;
-        //$comment->content='Latest Comment two';
-
-        //$comment->save();
-        //BlogPost which has comment abc
-        //$posts=BlogPost::whereHas('comment',function($query){$query->where('content','like','%abc%');})->get();
-        //Blogpost which does not have comment
-        //$post=BlogPost::doesntHave('comment')->get();
-        //We want posts which doesnt have words test one
-        //$posts=BlogPost::whereDoesntHave('comment',function($query){$query->where('content','like','%Test One%');})->get();
-        //How wecan get count of related models
-        //if we want to get comments
-        //$posts=BlogPost::withCount('comment')->get();
-        //fetch count of comments blogpost and latest
-        // $posts=BlogPost::withCount(['comment','comment as new_comment'=> function($query) { $query->where('created_at','>=','2020-02-24 13:00:00');}])->get();
     }
 
 
@@ -131,20 +71,24 @@ public function display()
 
         $validateData = $request->validated();
         $validateData['user_id'] = $request->user()->id;
-
-    //    dd($validateData);
-        // $blogPost = new BlogPost();
-        // $blogPost->title = $request->input('title');
-        // $blogPost->content = $request->input('content');
-        // $blogPost->save();
-
         $blogPost=BlogPost::create($validateData);
 
 
-        // dd($request->all());
-        $request->session()->flash('status','Blog Post was created');
-         return redirect()->route('posts.show', ['post' => $blogPost->id]);
+        if ($request->hasFile('thumbnail')) {
+            $path = $request->file('thumbnail')->store('thumbnails','public');
+            $blogPost->image()->save(
+                Image::create(['thumbnail' => $path])
+            );
+        }
+
+
+        $request->session()->flash('status', 'Blog post was created!');
+
+        return redirect()->route('posts.show', ['post' => $blogPost->id]);
     }
+
+
+
 
     /**
      * Display the specified resource.
@@ -247,6 +191,19 @@ public function display()
 
         $validateData=$request->validated();
         $post->fill($validateData);
+        if ($request->hasFile('thumbnail')) {
+            $path = $request->file('thumbnail')->store('thumbnails','public');
+            if($post->image){
+                Storage::delete($post->image->thumbnail);
+                $post->image->thumbnail=$path;
+                $post->image->save();
+            }else{
+                $post->image()->save(
+                    Image::create(['thumbnail' => $path])
+                );
+            }
+            }
+
         $post->save();
         $request->session()->flash('status','Your post has been updated');
         return redirect()->route('posts.show',['post'=>$post->id]);

@@ -48,6 +48,9 @@ class BlogPost extends Model
            ->with('user')
            ->with('tags');
    }
+   public function image(){
+       return $this->hasOne(Image::class);
+   }
 
     public static function boot()
     {

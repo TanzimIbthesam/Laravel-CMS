@@ -18,6 +18,11 @@
         .menuclass a{
             color: aliceblue !important;
         }
+        .para{
+            font-size: 16px;
+
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
